@@ -9,3 +9,5 @@ http://www.sqlalchemy.org/
 https://github.com/sqlobject/sqlobject
 
 https://ponyorm.com/
+
+http://flask-sqlalchemy.pocoo.org/2.3/quickstart/

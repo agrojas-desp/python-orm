@@ -1,1 +1,4 @@
 .idea/
+ponyorm/estore.sqlite
+SQLAlchemy/sqlalchemy_example.db
+SQLAlchemy/__pycache__/

@@ -3,7 +3,7 @@ from flask_sqlalchemy import SQLAlchemy
 from datetime import datetime
 
 app = Flask(__name__)
-app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite://'
+app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///sqlalchemy_example.db'
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 db = SQLAlchemy(app)
 
@@ -57,3 +57,4 @@ if __name__ == '__main__':
     db.session.add(py)
     print(Post.query.all())
     print(Category.query.all())
+    #db.drop_all()

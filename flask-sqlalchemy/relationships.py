@@ -20,7 +20,9 @@ class TestCase(db.Model):
     test_case_id = db.Column(db.String(100), nullable=False, primary_key=True)
     lookout_id = db.Column(db.String(100), nullable=False)
     app_id = db.Column(db.String(100), nullable=False)
-    request = db.relationship('TestCaseRequest', backref='test_case', lazy=True)
+    app_version = db.Column(db.String(100))
+    date_time = db.Column(db.DateTime, nullable=False, default=datetime.utcnow)
+    request = db.relationship('Request', backref='test_case', lazy=True)
 
     internal_request_execution = db.relationship('InternalRequestExecution', backref='test_case', lazy=True)
     test_execution = db.relationship('TestExecution', backref='test_case', lazy=True)
@@ -50,13 +52,14 @@ class Request(db.Model):
     expected_http_status = db.Column(db.Integer, nullable=False)
     expected_response = db.Column(db.Text(), nullable=False)
     app_id = db.Column(db.String(50), nullable=False)
-    request = db.relationship('TestCaseRequest', backref='request', lazy=True)
+    test_case_id = db.Column(db.String(100), db.ForeignKey('test_case.test_case_id'), nullable=False, primary_key=True)
     internal_request_execution = db.relationship('InternalRequestExecution', backref='request', lazy=True)
 
-    def __init__(self, app_id=None, event_id=None, lookout_id=None, lookout_description=None, url=None,
+    def __init__(self, test_case_id, app_id=None, event_id=None, lookout_id=None, lookout_description=None, url=None,
                  date_millis=None, date_time=None,
                  body=None, http_method=None, headers=None, type=None, expected_http_status=None,
                  expected_response=None):
+        self.test_case_id = test_case_id
         self.request_id = self._generate_id(app_id, event_id)
         self.app_id = app_id
         self.event_id = event_id
@@ -75,11 +78,6 @@ class Request(db.Model):
     @staticmethod
     def _generate_id(app_id, event_id):
         return app_id + '-' + event_id
-
-
-class TestCaseRequest(db.Model):
-    test_case_id = db.Column(db.String(100), db.ForeignKey('test_case.test_case_id'), nullable=False, primary_key=True)
-    request_id = db.Column(db.String(100), db.ForeignKey('request.request_id'), nullable=False, primary_key=True)
 
 
 class TestExecution(db.Model):
@@ -161,29 +159,29 @@ if __name__ == '__main__':
     db.create_all()
     app_id = "app-test"
     lookout_id = "look123"
+    print("Create and save TestCase")
+    test_case = TestCase(app_id, lookout_id)
+    db.session.add(test_case)
+    db.session.commit()
     print("Create and save Requests")
-    req_1 = Request(app_id=app_id, event_id="ev1", lookout_id=lookout_id, lookout_description="evento 1", url="url1",
+    req_1 = Request(test_case_id=test_case.test_case_id, app_id=app_id, event_id="ev1", lookout_id=lookout_id,
+                    lookout_description="evento 1", url="url1",
                     body="body", http_method="GET", headers="headers", type="E", date_millis=123,
                     expected_http_status=200, expected_response="response")
 
-    req_2 = Request(app_id=app_id, event_id="ev2", lookout_id=lookout_id, lookout_description="evento 2", url="url2",
+    req_2 = Request(test_case_id=test_case.test_case_id, app_id=app_id, event_id="ev2", lookout_id=lookout_id,
+                    lookout_description="evento 2", url="url2",
                     body="body", http_method="GET", headers="headers", type="E", date_millis=123,
                     expected_http_status=400, expected_response="response")
 
-    req_3 = Request(app_id=app_id, event_id="ev3", lookout_id=lookout_id, lookout_description="evento 3", url="url3",
+    req_3 = Request(test_case_id=test_case.test_case_id, app_id=app_id, event_id="ev3", lookout_id=lookout_id,
+                    lookout_description="evento 3", url="url3",
                     body="body", http_method="GET", headers="headers", type="E", date_millis=123,
                     expected_http_status=500, expected_response="response")
 
     db.session.add(req_1)
     db.session.add(req_2)
     db.session.add(req_3)
-    db.session.commit()
-    print("Create and save TestCase")
-    test_case = TestCase(app_id, lookout_id)
-    test_case_request_1 = TestCaseRequest(test_case_id=test_case.test_case_id, request_id=req_1.request_id)
-    test_case_request_2 = TestCaseRequest(test_case_id=test_case.test_case_id, request_id=req_2.request_id)
-    test_case_request_3 = TestCaseRequest(test_case_id=test_case.test_case_id, request_id=req_3.request_id)
-    db.session.add_all([test_case, test_case_request_1, test_case_request_2, test_case_request_3])
     db.session.commit()
     print("Create and save Execution")
     test_execution = TestExecution(test_case_id=test_case.test_case_id)
@@ -204,14 +202,18 @@ if __name__ == '__main__':
                                 url="url", body="body", http_method="GET", headers="headers", type="S", http_status=200,
                                 response="response")
 
-    db.session.add_all([req_ex_1,req_ex_2,req_ex_3])
+    db.session.add_all([req_ex_1, req_ex_2, req_ex_3])
     db.session.commit()
 
     print("Create and save Internal Request Execution")
-    i_req_1 = InternalRequestExecution(test_case_id=test_case.test_case_id,execution_id=test_execution.execution_id,request_id=req_1.request_id)
-    i_req_2 = InternalRequestExecution(test_case_id=test_case.test_case_id,execution_id=test_execution.execution_id,request_id=req_2.request_id)
-    i_req_3 = InternalRequestExecution(test_case_id=test_case.test_case_id,execution_id=test_execution.execution_id,request_id=req_3.request_id)
-    i_req_4 = InternalRequestExecution(test_case_id=test_case.test_case_id,execution_id=test_execution.execution_id,request_id=req_1.request_id)
+    i_req_1 = InternalRequestExecution(test_case_id=test_case.test_case_id, execution_id=test_execution.execution_id,
+                                       request_id=req_1.request_id)
+    i_req_2 = InternalRequestExecution(test_case_id=test_case.test_case_id, execution_id=test_execution.execution_id,
+                                       request_id=req_2.request_id)
+    i_req_3 = InternalRequestExecution(test_case_id=test_case.test_case_id, execution_id=test_execution.execution_id,
+                                       request_id=req_3.request_id)
+    i_req_4 = InternalRequestExecution(test_case_id=test_case.test_case_id, execution_id=test_execution.execution_id,
+                                       request_id=req_1.request_id)
 
     db.session.add_all([i_req_1, i_req_2, i_req_3])
     db.session.commit()

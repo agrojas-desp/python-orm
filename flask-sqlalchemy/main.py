@@ -41,7 +41,9 @@ class User(db.Model):
 
 
 if __name__ == '__main__':
+    db.drop_all()
     db.create_all()
+
     admin = User(username='admin', email='admin@example.com')
     guest = User(username='guest', email='guest@example.com')
     db.session.add(admin)
@@ -57,4 +59,4 @@ if __name__ == '__main__':
     db.session.add(py)
     print(Post.query.all())
     print(Category.query.all())
-    #db.drop_all()
+

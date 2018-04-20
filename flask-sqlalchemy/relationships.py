@@ -193,12 +193,12 @@ if __name__ == '__main__':
                                 url="url", body="body", http_method="GET", headers="headers", type="S", http_status=200,
                                 response="response")
     req_ex_2 = RequestExecution(execution_id=test_execution.execution_id, request_id=req_2.request_id,
-                                lookout_description="",
+                                lookout_description="lookout_description_2",
                                 url="url", body="body", http_method="GET", headers="headers", type="S", http_status=200,
                                 response="response")
 
     req_ex_3 = RequestExecution(execution_id=test_execution.execution_id, request_id=req_3.request_id,
-                                lookout_description="",
+                                lookout_description="lookout_description_3",
                                 url="url", body="body", http_method="GET", headers="headers", type="S", http_status=200,
                                 response="response")
 
@@ -217,3 +217,14 @@ if __name__ == '__main__':
 
     db.session.add_all([i_req_1, i_req_2, i_req_3])
     db.session.commit()
+
+    model = RequestExecution
+    query = {'execution_id':req_ex_3.execution_id,'request_id': req_ex_3.request_id}
+
+    result = model.query.filter_by(**query).first()
+    print(result.lookout_description )
+    setattr(result, 'lookout_description', req_ex_2.lookout_description)
+    db.session.add(result)
+    db.session.commit()
+    result = model.query.filter_by(**query).first()
+    print(result.lookout_description )
